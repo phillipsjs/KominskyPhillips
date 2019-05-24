@@ -13,3 +13,10 @@ Postdoctoral Fellow
 Department of Psychology
 Harvard University
 jkominsky@g.harvard.edu
+
+Correspondance concerning the repository, data, code, and materials can be addressed to:
+
+Jonathan Phillips
+Department of Cognitive Science
+Dartmouth College
+jonathan.s.phillips@dartmouth.edu
