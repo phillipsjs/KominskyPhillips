@@ -29,7 +29,7 @@ jkomPalette <- c("#C93312","#046C9A","#EBCC2A","grey")
 #### Experiment 1 ####
 d.1 <- read.csv("data/study1.csv")
 
-##demongraphics
+##demographics
 d1.age <- matrix(c("mean",mean(d.1$Age,na.rm=T),"sd",sd(d.1$Age,na.rm=T),"n",length(d.1$Age)),ncol = 3)
 print(d1.age)
 
@@ -172,8 +172,7 @@ fig1a <- ggplot(d1.corrPlot, aes(x=swCause, y=d1Cause)) +
 
 #fig1a ## If you want to see the image
 
-# ggsave(fig1a, file="figures/fig1a.jpg",dpi=800)
-
+ggsave(fig1a, device='tiff',file="figures/fig1a.tiff",dpi=400, width=7, height=7)
 ## Relevance plots
 
 fig1b <- ggplot(d1.corrPlot, aes(x= d1Relevance, y=d1Cause)) +
@@ -203,8 +202,8 @@ fig1b <- ggplot(d1.corrPlot, aes(x= d1Relevance, y=d1Cause)) +
 
 #fig1b ##if you want to see the image
 
-# ggsave(fig1b, file="figures/fig1b.jpg",dpi=800)
-
+ggsave(fig1b, device='tiff', file="figures/fig1b.tiff",dpi=400, width=7, height=7)
+#ggsave(fig1b, device='eps', file="figures/fig1b.eps", units='mm', height=235, width=239.5)
 
 ## Exp. 1 Primary analyses ####
 d.1$cause <- NA
@@ -551,7 +550,8 @@ fig2a <- d2.sum %>% filter(question=="Cause") %>%
   )
 #fig2a ## If you want to see the causation graph
 
-# ggsave(fig2a,file="figures/fig2a.jpg", dpi=800)
+ggsave(fig2a,device='tiff',file="figures/fig2a.tiff", dpi=400, height=7, width=7)
+#ggsave(fig2a, device='eps', file="figures/fig2a.eps", units='mm', width=153, height=122)
 
 ## Counterfactual Relevance plot
 fig2b <- d2.sum %>% filter(question=="Relevance") %>%
@@ -579,7 +579,8 @@ fig2b <- d2.sum %>% filter(question=="Relevance") %>%
   )
 # fig2b ##If you want to see the relevance plot
  
-# ggsave(fig2b,file="figures/fig2b.jpg", dpi=800)
+ggsave(fig2b, device='tiff',file="figures/fig2b.tiff", dpi=400, height=7, width=7)
+#ggsave(fig2b, device='eps', file="figures/fig2b.eps", units='mm', width=153, height=122)
 
 ## Replication of Icard et al. 
 
@@ -646,11 +647,22 @@ d2D.lm1r <- lmer(response ~ (1|Story), data = d2l[d2l$question=="Relevance" & d2
 anova(d2D.lm0r,d2D.lm1r) 
 pwr.chisq.test(w=43.652,N=length(unique(d2$ResponseId)),df=1)
 
-d2.cond <- left_join(d2.cond[d2.cond$question=="Cause",c(1:2,4,6,8)],
-                     d2.cond[d2.cond$question=="Relevance",c(1:2,4,6,8)],
-                     by=c("norm","structure","Story"))
+d2.cond <- d2l %>%
+  group_by(question, norm, structure, Story) %>%
+  summarise(N = length(response),
+            mean = mean(response, na.rm=TRUE),
+            sd   = sd(response,na.rm=TRUE),
+            se   = sd / sqrt(N))
+# Now spread by question
+d2.cond <-left_join(d2.cond[d2.cond$question=="Cause",c(2:4,6,8)],
+                    d2.cond[d2.cond$question=="Relevance",c(2:4,6,8)],
+                    by=c("norm","structure","Story")) 
 colnames(d2.cond) <- c("norm","structure","Story","cause.mean","cause.se","rel.mean","rel.se")
 
+d2.subj <- d2l
+d2.subj <- left_join(d2.subj[d2.subj$question=="Cause",c(1:2,4:5,7)], d2.subj[d2.subj$question=="Relevance",c(1:2,4:5,7)], 
+                     by=c("norm","structure","Story","ResponseId"))
+colnames(d2.subj) <- c("ResponseId","cause.mean","Story","structure","norm","rel.mean")
 d2.subj$norm = factor(d2.subj$norm, levels=c("Violating","Conforming"))
 
 fig3 <- d2.cond %>% ggplot(aes(x=rel.mean, y=cause.mean)) +
@@ -682,8 +694,8 @@ fig3 <- d2.cond %>% ggplot(aes(x=rel.mean, y=cause.mean)) +
     ,plot.title = element_text(face="bold",vjust=.75)
   )
 
-#fig3 ## If you want to see the fig
-
+fig3 ## If you want to see the fig
+ggsave(fig3, device='tiff', file="figures/fig3.tiff", dpi=400, height = 9.88, width = 12)
 
 ## Correlations at the condition level:
 ### Conjunctive:
@@ -793,7 +805,7 @@ fig4a <- ggplot(d3a.sum, aes(x=condition, y=mean, fill=condition)) +
     plot.background = element_blank()
     ,panel.grid.major = element_blank()
     ,panel.grid.minor = element_blank()
-    ,legend.position=c(.165,.92)
+    ,legend.position=c(.24,.92)
     ,legend.title=element_blank()
     #,legend.title=element_text(size=rel(1.75))
     ,legend.text=element_text(size=rel(1.5))
@@ -806,7 +818,8 @@ fig4a <- ggplot(d3a.sum, aes(x=condition, y=mean, fill=condition)) +
 
 #fig4a ##if you want to see the fig
 
-#ggsave(fig4a,file="figures/fig4a.jpg", dpi=800)
+ggsave(fig4a, device='tiff',file="figures/fig4a.tiff", dpi=400, width=8, height=8)
+#ggsave(fig4a, device='eps', file='figures/fig4Left.eps', units='mm',width=322, height=248)
 
 table3a <- d3al %>% group_by(condition, question,causeLabel) %>% tally() %>% spread(causeLabel,n)
 
@@ -977,7 +990,7 @@ fig4b <- ggplot(d3b.sum, aes(x=condition, y=mean, fill=condition)) +
     plot.background = element_blank()
     ,panel.grid.major = element_blank()
     ,panel.grid.minor = element_blank()
-    ,legend.position=c(.165,.92)
+    ,legend.position=c(.24,.92)
     ,legend.title=element_blank()
     ,legend.text=element_text(size=rel(1.5))
     ,axis.text.x=element_blank()
@@ -987,10 +1000,10 @@ fig4b <- ggplot(d3b.sum, aes(x=condition, y=mean, fill=condition)) +
     ,axis.title.y = element_text(vjust = 0.75)
   )
 
-## fig4b # if you want to see figure 4b
+# fig4b # if you want to see figure 4b
 
-# ggsave(fig4b,file="figures/fig4b.jpg",dpi=800)
-
+ggsave(fig4b,device='tiff',file="figures/fig4b.tiff",dpi=400, height=8, width=8)
+#ggsave(fig4b, device='eps', filename='figures/fig4Right',units='mm',width=322,height=248)
 
 ## Overall analyses
 lm3b.0 <- lmer(cause~condition * judgment + (1|ResponseID), data=d3bl)
@@ -1196,7 +1209,7 @@ fig5a <- ggplot(d4.sum[d4.sum$judgment=="Cause",], aes(x=condition, y=mean, fill
     plot.background = element_blank()
     ,panel.grid.major = element_blank()
     ,panel.grid.minor = element_blank()
-    ,legend.position=c(.125,.94)
+    ,legend.position=c(.22,.92)
     ,legend.title=element_blank()
     #,legend.title=element_text(size=rel(1.75))
     ,legend.text=element_text(size=rel(1.5))
@@ -1210,7 +1223,8 @@ fig5a <- ggplot(d4.sum[d4.sum$judgment=="Cause",], aes(x=condition, y=mean, fill
 #fig5a ##if you want to view figure 5
 
 
-# ggsave(fig5a, file="figures/fig5a.jpg",dpi=800)
+ggsave(fig5a, device='tiff', file="figures/fig5a.tiff",dpi=400, width=8, height=8)
+#ggsave(fig5a, device='eps', filename='figures/fig5Left.eps', units='mm', width=260, height=210)
 
 fig5b <- ggplot(d4.sum[d4.sum$judgment=="Relevance",], aes(x=condition, y=mean, fill=condition)) +
   geom_bar(stat="identity", position="dodge") +
@@ -1225,7 +1239,7 @@ fig5b <- ggplot(d4.sum[d4.sum$judgment=="Relevance",], aes(x=condition, y=mean, 
     plot.background = element_blank()
     ,panel.grid.major = element_blank()
     ,panel.grid.minor = element_blank()
-    ,legend.position=c(.125,.94)
+    ,legend.position=c(.22,.92)
     ,legend.title=element_blank()
     #,legend.title=element_text(size=rel(1.75))
     ,legend.text=element_text(size=rel(1.5))
@@ -1238,7 +1252,8 @@ fig5b <- ggplot(d4.sum[d4.sum$judgment=="Relevance",], aes(x=condition, y=mean, 
 
 #fig5b ## if you want to view figure 5b
 
-# ggsave(fig5b, file="figures/fig5b.jpg",dpi=800)
+ggsave(fig5b, device='tiff', file="figures/fig5b.jpg",dpi=400, width=8, height=8)
+#ggsave(fig5b, device='eps', filename='figures/fig5Right.eps', units='mm', width=260, height=210)
 
 
 ### Figure 6 ----
@@ -1286,7 +1301,8 @@ fig6 <- ggplot(d4.sum2, aes(x=rel.mean, y=cause.mean)) +
   )
 #fig6 ## if you want to view figure 6
 
-# ggsave(fig6,file="figures/fig6.jpg",dpi=800)
+ggsave(fig6, device='tiff',file="figures/fig6.jpg",dpi=400, width=7, height=7)
+
 
 cor.test(d4.sum2$cause.mean,d4.sum2$rel.mean)
 pwr.r.test(n=12,.9781127)
